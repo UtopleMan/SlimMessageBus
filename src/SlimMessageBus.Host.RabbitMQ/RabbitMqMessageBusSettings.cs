@@ -50,5 +50,17 @@ public class RabbitMqMessageBusSettings : HasProviderExtensions
     /// Default is 10 seconds. Set to <c>null</c> to disable the timeout and rely solely on the caller's cancellation token.
     /// </summary>
     public TimeSpan? PublisherConfirmsTimeout { get; set; } = TimeSpan.FromSeconds(10);
+
+    /// <summary>
+    /// When <c>true</c>, the bus does NOT subscribe its own
+    /// <c>OnConnectionShutdownAsync</c> handler to the <see cref="IConnection"/>
+    /// it creates, leaving the underlying <c>AutorecoveringConnection</c> as
+    /// the sole owner of connection + topology + channel recovery. The
+    /// in-bus reconnect loop in <c>RabbitMqChannelManager</c> would
+    /// otherwise race with the client library's native recovery and
+    /// occasionally leak connections under repeated broker drops.
+    /// Default is <c>false</c> (preserve historical behavior).
+    /// </summary>
+    public bool UseNativeRecoveryOnly { get; set; }
 }
 

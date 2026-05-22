@@ -123,9 +123,15 @@ internal partial class RabbitMqChannelManager : IRabbitMqChannel, IAsyncDisposab
         if (channel == null)
         {
             // If channel is null, trigger immediate reconnection attempt
-            // The semaphore in EstablishConnection will prevent concurrent attempts
+            // The semaphore in EstablishConnection will prevent concurrent attempts.
+            // Skipped in UseNativeRecoveryOnly mode — AutorecoveringConnection
+            // keeps the channel healing transparently, so kicking off a
+            // parallel EstablishConnection would just race with it.
             LogChannelNotAvailableAttemptingReconnection();
-            OnConnectionRetryTimer(null);
+            if (!_providerSettings.UseNativeRecoveryOnly)
+            {
+                OnConnectionRetryTimer(null);
+            }
 
             throw new ProducerMessageBusException("The Channel is not available at this time");
         }
@@ -154,8 +160,14 @@ internal partial class RabbitMqChannelManager : IRabbitMqChannel, IAsyncDisposab
                 ? await _providerSettings.ConnectionFactory.CreateConnectionAsync(_providerSettings.Endpoints)
                 : await _providerSettings.ConnectionFactory.CreateConnectionAsync();
 
-            // Subscribe to connection shutdown events for better resilience
-            newConnection.ConnectionShutdownAsync += OnConnectionShutdownAsync;
+            // Subscribe to connection shutdown events for better resilience —
+            // skipped when the caller opts into native-only recovery on the
+            // settings, in which case AutorecoveringConnection owns reconnect
+            // end-to-end and our parallel loop would only race with it.
+            if (!_providerSettings.UseNativeRecoveryOnly)
+            {
+                newConnection.ConnectionShutdownAsync += OnConnectionShutdownAsync;
+            }
 
             var needsConfirmsChannel = NeedsConfirmsChannel();
 
