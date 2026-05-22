@@ -118,4 +118,19 @@ public static class RabbitMqConsumerBuilderExtensions
         RabbitMqProperties.MessageAcknowledgementMode.Set(builder.ConsumerSettings, mode);
         return builder;
     }
+
+    /// <summary>
+    /// Sets the per-consumer broker prefetch count (BasicQos with global=false).
+    /// Without this, RabbitMQ pushes the entire queue at a single consumer the
+    /// moment it subscribes, which destroys round-robin fairness across replicas
+    /// and explodes the consumer's local buffer. A small value (10-50, depending
+    /// on per-message work) keeps deliveries flowing while letting siblings
+    /// pick up new messages as they arrive.
+    /// </summary>
+    public static TConsumerBuilder PrefetchCount<TConsumerBuilder>(this TConsumerBuilder builder, ushort prefetchCount)
+        where TConsumerBuilder : AbstractConsumerBuilder
+    {
+        RabbitMqProperties.PrefetchCount.Set(builder.ConsumerSettings, prefetchCount);
+        return builder;
+    }
 }

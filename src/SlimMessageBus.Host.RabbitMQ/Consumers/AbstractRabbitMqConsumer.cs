@@ -98,6 +98,19 @@ public abstract class AbstractRabbitMqConsumer : AbstractConsumer
         string newConsumerTag;
         try
         {
+            // Per-consumer prefetch: apply BasicQos(global: false) BEFORE
+            // BasicConsumeAsync so the limit is in effect for the new consumer
+            // tag's first delivery. Without this, the broker dumps the entire
+            // queue at the first consumer that subscribes, defeating
+            // replica-level round-robin and ballooning the local buffer.
+            var prefetchCount = Settings
+                .Select(s => s.GetPrefetchCount())
+                .FirstOrDefault(p => p.HasValue);
+            if (prefetchCount.HasValue)
+            {
+                await _channel.Channel.BasicQosAsync(prefetchSize: 0, prefetchCount: prefetchCount.Value, global: false);
+            }
+
             newConsumerTag = await _channel.Channel.BasicConsumeAsync(Path, autoAck: AcknowledgementMode == RabbitMqMessageAcknowledgementMode.AckAutomaticByRabbit, newConsumer);
         }
         catch

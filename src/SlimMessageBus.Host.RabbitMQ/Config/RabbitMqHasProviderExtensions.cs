@@ -11,6 +11,9 @@ static internal class RabbitMqHasProviderExtensions
     public static string GetQueueName(this AbstractConsumerSettings c)
         => c.GetOrDefault<string>(RabbitMqProperties.QueueName, null);
 
+    public static ushort? GetPrefetchCount(this AbstractConsumerSettings c)
+        => c.GetOrDefault<ushort?>(RabbitMqProperties.PrefetchCount, null);
+
     public static string GetBindingRoutingKey(this AbstractConsumerSettings c, HasProviderExtensions settings = null)
         => c.GetOrDefault<string>(RabbitMqProperties.BindingRoutingKey, settings, null);
 

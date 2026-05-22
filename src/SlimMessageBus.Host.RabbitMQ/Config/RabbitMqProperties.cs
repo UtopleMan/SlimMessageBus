@@ -32,5 +32,7 @@ static internal class RabbitMqProperties
 
     public static readonly ProviderExtensionProperty<RabbitMqMessageAcknowledgementMode?> MessageAcknowledgementMode = new($"RabbitMQ_{nameof(MessageAcknowledgementMode)}");
 
+    public static readonly ProviderExtensionProperty<ushort?> PrefetchCount = new($"RabbitMQ_{nameof(PrefetchCount)}");
+
     public static readonly ProviderExtensionProperty<RabbitMqMessageBusSettings> ProviderSettings = new($"RabbitMQ_{nameof(ProviderSettings)}");
 }
