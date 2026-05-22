@@ -45,8 +45,16 @@ public static class RabbitMqMessageBusSettingsExtensions
     /// <param name="autoDelete"></param>
     /// <param name="routingKey"></param>
     /// <returns></returns>
-    public static RabbitMqMessageBusSettings UseDeadLetterExchangeDefaults(this RabbitMqMessageBusSettings settings, string exchangeType = null, bool? durable = null, bool? autoDelete = null, string routingKey = null)
+    public static RabbitMqMessageBusSettings UseDeadLetterExchangeDefaults(this RabbitMqMessageBusSettings settings, string exchangeType = null, bool? durable = null, bool? autoDelete = null, string routingKey = null, string name = null)
     {
+        // Phoenix patch: `name` propagates the DLX exchange name to every
+        // consumer via the GetOrDefault(..., _providerSettings, null)
+        // fallback in RabbitMqTopologyService, so per-consumer
+        // .DeadLetterExchange(...) calls become optional.
+        if (name != null)
+        {
+            RabbitMqProperties.DeadLetterExchange.Set(settings, name);
+        }
         if (exchangeType != null)
         {
             RabbitMqProperties.DeadLetterExchangeType.Set(settings, exchangeType);
